@@ -1,0 +1,110 @@
+{
+  "insights": {
+    "top_engagement_category": {
+      "category": "Web Development",
+      "score": 0.5006
+    },
+    "bottom_engagement_category": {
+      "category": "IT & Software",
+      "score": 0.4849
+    },
+    "top_completion_category": {
+      "category": "Photography",
+      "rate": 71.12
+    },
+    "lowest_completion_category": {
+      "category": "Design",
+      "rate": 67.65
+    },
+    "highest_dropout_level": {
+      "level": "Advanced",
+      "avg_completion": 50.43
+    },
+    "strongest_completion_correlations": {
+      "norm_completion_rate": 1.0,
+      "engagement_score": 0.748,
+      "rating": 0.353
+    },
+    "duration_vs_completion": {
+      "short_courses_under_10h": 76.85,
+      "medium_courses_10_30h": 69.9,
+      "long_courses_over_30h": 61.1
+    },
+    "rating_vs_completion": {
+      "low_rated_below_3_5": 58.36,
+      "mid_rated_3_5_to_4_5": 67.16,
+      "high_rated_above_4_5": 75.82
+    },
+    "retention_distribution": {
+      "Medium": 1458,
+      "High": 687,
+      "Low": 355
+    },
+    "overall_stats": {
+      "total_courses": 2500,
+      "total_students": 33335361,
+      "avg_engagement_score": 0.494,
+      "avg_completion_rate": 69.25,
+      "avg_watch_time": 12.85,
+      "avg_rating": 4.18
+    }
+  },
+  "ml_prediction": {
+    "model": "Logistic Regression",
+    "features": [
+      "rating",
+      "num_reviews",
+      "watch_time",
+      "num_lectures",
+      "content_duration",
+      "level_encoded"
+    ],
+    "target": "retention_binary (High=1, Low/Medium=0)",
+    "test_size": 0.25,
+    "accuracy": 0.8192,
+    "precision": 0.7185,
+    "recall": 0.564,
+    "confusion_matrix": [
+      [
+        415,
+        38
+      ],
+      [
+        75,
+        97
+      ]
+    ],
+    "feature_coefficients": {
+      "rating": 0.5935,
+      "num_reviews": 0.1321,
+      "watch_time": 5.3894,
+      "num_lectures": -0.682,
+      "content_duration": -7.1426,
+      "level_encoded": 0.0358
+    },
+    "train_samples": 1875,
+    "test_samples": 625
+  },
+  "recommendations": [
+    {
+      "title": "Optimize Course Length",
+      "description": "Short courses (<10h) have 76.85% completion vs 61.1% for long courses (>30h). Consider breaking long courses into shorter modules.",
+      "impact": "High"
+    },
+    {
+      "title": "Improve Course Quality",
+      "description": "High-rated courses (>4.5) achieve 75.82% completion vs 58.36% for low-rated (<3.5). Investing in content quality directly improves retention.",
+      "impact": "High"
+    },
+    {
+      "title": "Address Advanced Level Dropout",
+      "description": "Advanced courses have the lowest avg completion at 50.43%. Add prerequisites, mentorship, or scaffolded learning paths.",
+      "impact": "Medium"
+    },
+    {
+      "title": "Learn from Top Performers",
+      "description": "Web Development leads engagement (0.501) while IT & Software trails (0.485). Analyze what makes top categories succeed and replicate those patterns.",
+      "impact": "Medium"
+    }
+  ]
+}
