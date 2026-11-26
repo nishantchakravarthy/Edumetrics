@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use this project or its dataset, please cite it as below."
+title: "EduMetrics: E-Learning Engagement and Student Retention Analytics"
+type: software
+authors:
+  - family-names: "Chakravarthy"
+    given-names: "Nishant"
+    email: "nishant.chakravarthy@gmail.com"
+    affiliation: "New Horizon College of Engineering"
+repository-code: "https://github.com/nishantchakravarthy/Edumetrics"
+url: "https://edumetrics-brown.vercel.app"
+abstract: >-
+  A Python analytics pipeline and interactive 3D web frontend that analyse 2,500
+  synthetic online courses (2010 to 2025) to find what drives learner completion,
+  with a logistic regression model that predicts high retention.
+keywords:
+  - e-learning
+  - student retention
+  - data analytics
+  - machine learning
+  - data visualization
+  - three.js
+license: MIT
+date-released: "2026-11-26"
