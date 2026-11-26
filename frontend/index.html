@@ -109,6 +109,7 @@ p{margin:0}
 .end .row{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;width:100%}
 .end p{color:var(--dim);font-size:14px;max-width:52ch}
 .nogl{position:fixed;inset:auto 0 0 0;padding:12px;text-align:center;font-size:14px;color:var(--dim);z-index:3}
+.smooth,.smooth body{overflow:hidden;height:100%;overscroll-behavior:none}.smooth body{touch-action:none}.smooth .probe input{touch-action:pan-x}
 .smooth #sm{position:fixed;top:0;left:0;right:0;z-index:3;will-change:transform}
 .smooth .sticky{position:relative;top:auto;will-change:transform}
 #prog{position:fixed;top:0;left:0;right:0;height:2px;z-index:30;background:linear-gradient(90deg,#5eead4,#9db4ff,#ff8a5c);transform-origin:0 50%;transform:scaleX(0);box-shadow:0 0 12px rgba(94,234,212,.6)}
@@ -149,6 +150,7 @@ h1 .w>span{background:linear-gradient(180deg,#fff 35%,rgba(226,232,244,.66));-we
   h1{font-size:clamp(44px,13vw,64px)}
   .stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stats div{padding:14px 0 16px 14px}.stats div:nth-child(3){border-left:0;padding-left:0}
   .mcard{display:none}.hero .pill{display:none}
+  header.top{background:linear-gradient(rgba(4,6,13,.92) 55%,rgba(4,6,13,0));padding-bottom:26px}
   .ch{height:250vh}
   .sticky{align-items:flex-end;padding-bottom:max(6vh,28px)}
   .hero-c .lead{background:none}.copy{width:100%;padding:22px 0 0;background:linear-gradient(transparent,rgba(4,6,13,.9) 28%);margin:0 -18px;padding-inline:18px;width:calc(100% + 36px)}
@@ -209,6 +211,8 @@ h1 em,h2 em{color:#a8f0df}
 .corner.bl{left:14px;bottom:14px;border-left-width:1px;border-bottom-width:1px}.corner.br{right:14px;bottom:14px;border-right-width:1px;border-bottom-width:1px}
 @media(max-width:760px){h1{font-size:clamp(44px,12vw,60px)}h2{font-size:clamp(40px,11vw,56px)}.wordmark{font-size:19.5vw;bottom:-1vw}.hero-c .lead{align-self:end;padding:0 0 30vw}#hudr,.corner{display:none}.probe{display:none}.chips{margin-top:14px}}
 @media(pointer:coarse){#cur{display:none}}
+header.top{background:linear-gradient(rgba(4,6,13,.9) 50%,rgba(4,6,13,0));padding-bottom:26px}
+@media(min-width:761px){.recs{margin-top:34px;gap:14px}.rec{padding:20px 24px}.rec p{margin-top:4px}.rec h3{margin-top:10px}}
 </style>
 </head>
 <body>
@@ -338,23 +342,23 @@ else{const n=load.querySelector('.n'),bar=load.querySelector('.bar'),t0=performa
 
 /* ---------- motion: inertia scroll, pinning, scrubbed copy ---------- */
 const secs=$$('[data-s]'),railA=$$('.rail a'),prog=$('#prog'),sm=$('#sm');
-const SM=!RM&&matchMedia('(pointer:fine)').matches&&innerWidth>760;
+const SM=!RM;
 if(SM)document.documentElement.classList.add('smooth');
-let F=0,Fs=0,SY=scrollY,bounds=[],vel=0,lastY=scrollY,snaps=[],tw=null,lastWheel=0,acc=0,needQuiet=false;
+let TY=0,curIdx=0,maxY=0,F=0,Fs=0,SY=scrollY,bounds=[],vel=0,lastY=scrollY,snaps=[],tw=null,lastWheel=0,acc=0,needQuiet=false;
 const cl=x=>x<0?0:x>1?1:x,eo=x=>1-Math.pow(1-x,3),sstep=x=>x*x*(3-2*x);
 const chs=secs.filter(s=>s.classList.contains('ch')).map(s=>{const st=s.querySelector('.sticky'),cp=st.querySelector('.sc');return{s,st,cp,hd:cp.querySelector('h1,h2'),wl:[...cp.querySelectorAll('.wordmark span')],words:[...cp.querySelectorAll('.w>span')],subs:[...cp.querySelectorAll('.sf')],cnt:[...cp.querySelectorAll('[data-count]')],top:0,h:0}});
-const measure=()=>{if(SM)document.body.style.height=sm.scrollHeight+'px';const vh=innerHeight;for(const c of chs){c.top=c.s.offsetTop;c.h=c.s.offsetHeight}
+const measure=()=>{const vh=innerHeight;for(const c of chs){c.top=c.s.offsetTop;c.h=c.s.offsetHeight}
   bounds=secs.map(s=>{const t=s.offsetTop,h=s.offsetHeight;return[t-vh*.15,Math.max(t-vh*.15,t+h-vh*.85)]});bounds[0][0]=-1e9;
-  const max=Math.max(0,(SM?sm.scrollHeight:document.documentElement.scrollHeight)-vh);snaps=[];
+  const max=maxY=Math.max(0,(SM?sm.scrollHeight:document.documentElement.scrollHeight)-vh);snaps=[];
   for(const s of secs){if(s.id==='c0')snaps.push(0);else if(s.id==='c7')snaps.push(s.offsetTop+s.offsetHeight-vh);else if(s.classList.contains('ch'))snaps.push(s.offsetTop+(s.offsetHeight-vh*1.32)/2);
-    else for(const b of s.querySelectorAll('.blk'))snaps.push(s.offsetTop+b.offsetTop-vh*.16)}
-  snaps=snaps.map(y=>Math.round(Math.max(0,Math.min(max,y))))};
+    else for(const b of s.querySelectorAll('.blk')){const y0=s.offsetTop+b.offsetTop-vh*.14,y1=s.offsetTop+b.offsetTop+b.offsetHeight-vh*.92;snaps.push(y0);let y=y0;while(y1-y>vh*.04){y=Math.min(y+vh*.78,y1);snaps.push(y)}}}
+  snaps=[...new Set(snaps.map(y=>Math.round(Math.max(0,Math.min(max,y)))))].sort((p,q)=>p-q);
+  if(SM&&!tw&&snaps.length){curIdx=Math.min(curIdx,snaps.length-1);SY=TY=snaps[curIdx]}};
 const nearest=y=>{let bi=0,bd=1e12;snaps.forEach((s,i)=>{const d=Math.abs(s-y);if(d<bd){bd=d;bi=i}});return bi};
 const ease=u=>u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2;
 const goTo=i=>{i=Math.max(0,Math.min(snaps.length-1,i));const to=snaps[i];if(Math.abs(to-SY)<2&&!tw)return;
-  tw={from:SY,to,t0:performance.now(),dur:Math.min(1600,Math.max(1000,900+Math.abs(to-SY)/innerHeight*170)),idx:i}};
-const step=d=>{const cur=tw?tw.idx:nearest(SY);let i=cur+d;
-  if(!tw){const here=snaps[cur];if(d>0&&SY<here-8)i=cur;if(d<0&&SY>here+8)i=cur}goTo(i)};
+  const mob=innerWidth<760;tw={from:SY,to,t0:performance.now(),dur:mob?Math.min(3000,Math.max(2400,2200+Math.abs(to-SY)/innerHeight*220)):Math.min(3200,Math.max(2500,2300+Math.abs(to-SY)/innerHeight*260)),idx:i}};
+const step=d=>{const cur=tw?tw.idx:curIdx;goTo(cur+d)};
 if(SM){
   addEventListener('wheel',e=>{if(e.ctrlKey)return;e.preventDefault();const now=performance.now(),gap=now-lastWheel;lastWheel=now;
     if(tw)return;if(needQuiet){if(gap<170)return;needQuiet=false}
@@ -363,21 +367,26 @@ if(SM){
     if(k==='ArrowDown'||k==='PageDown'||(k===' '&&!e.shiftKey))d=1;else if(k==='ArrowUp'||k==='PageUp'||(k===' '&&e.shiftKey))d=-1;
     else if(k==='Home'){e.preventDefault();goTo(0);return}else if(k==='End'){e.preventDefault();goTo(snaps.length-1);return}
     if(d){e.preventDefault();if(!tw)step(d)}});
+  let ts=null;
+  addEventListener('touchstart',e=>{if(e.touches.length>1){ts=null;return}const p=e.touches[0];ts={x:p.clientX,y:p.clientY,t:performance.now(),ui:!!(e.target.closest&&e.target.closest('input'))}},{passive:true});
+  addEventListener('touchmove',e=>{if(ts&&ts.ui)return;if(e.cancelable)e.preventDefault()},{passive:false});
+  addEventListener('touchend',e=>{if(!ts||ts.ui){ts=null;return}const p=e.changedTouches[0],dy=ts.y-p.clientY,dx=ts.x-p.clientX,el=performance.now()-ts.t;ts=null;
+    if(Math.abs(dy)<Math.abs(dx)*1.2)return;if(Math.abs(dy)>42||(Math.abs(dy)>16&&el<220)){const d=Math.sign(dy);if(!tw)step(d);else if(Math.sign(tw.to-tw.from)===d)step(d)}},{passive:true});
 }
 const scrollF=()=>{const y=SY;for(let k=0;k<bounds.length;k++){const[a,b]=bounds[k];if(y<=b)return y>=a?k:k-1+sstep(cl((y-bounds[k-1][1])/(a-bounds[k-1][1])))}return bounds.length-1};
 const pipe=$('#pipe'),pl=$('#pl'),lis=$$('#pipe li');
 function motion(now,dt){
-  const ty=scrollY,vh=innerHeight;
-  if(SM&&tw){const u=Math.min(1,(now-tw.t0)/tw.dur),y=tw.from+(tw.to-tw.from)*ease(u);vel=(y-SY)/Math.max(dt,.001)*.06;SY=y;scrollTo(0,y);sm.style.transform=`translate3d(0,${(-SY).toFixed(2)}px,0)`;if(u>=1){tw=null;needQuiet=true;SY=tw===null?y:SY}}
+  const ty=SM?TY:scrollY,vh=innerHeight;
+  if(SM&&tw){const u=Math.min(1,(now-tw.t0)/tw.dur),y=tw.from+(tw.to-tw.from)*ease(u);vel=(y-SY)/Math.max(dt,.001)*.06;SY=TY=y;sm.style.transform=`translate3d(0,${(-SY).toFixed(2)}px,0)`;if(u>=1){curIdx=tw.idx;SY=TY=tw.to;tw=null;needQuiet=true}}
   else if(SM){SY+=(ty-SY)*(1-Math.exp(-dt*6.5));if(Math.abs(ty-SY)<.05)SY=ty;sm.style.transform=`translate3d(0,${(-SY).toFixed(2)}px,0)`;vel=ty-SY}
   else{SY=ty;vel+=((ty-lastY)*.6-vel)*.25;lastY=ty}
   const sk=RM?0:Math.max(-1.5,Math.min(1.5,vel*.005));
   for(const c of chs){
     if(SM){const pin=Math.max(0,Math.min(c.h-vh,SY-c.top));c.st.style.transform=`translate3d(0,${pin.toFixed(2)}px,0)`}
     let e=c.s.id==='c0'?(introStart==null?0:cl((now-introStart-1000)/1500)):cl((SY-(c.top-vh*.04))/(vh*.42));
-    let x=c.s.id==='c7'?0:cl((SY-(c.top+c.h-vh*1.42))/(vh*.36));
+    let x=c.s.id==='c7'?0:cl((SY-(c.top+c.h-vh*1.5))/(vh*.45));
     if(RM){e=1;x=0}
-    const vis=e*(1-x);c.cp.style.opacity=vis.toFixed(3);if(vis<=.001)continue;
+    const vis=sstep(e)*sstep(1-x);c.cp.style.opacity=vis.toFixed(3);if(vis<=.001)continue;
     c.cp.style.transform=`translate3d(0,${((1-eo(e))*80-x*x*120).toFixed(1)}px,0) skewY(${sk.toFixed(2)}deg)`;
     if(c.hd)c.hd.style.setProperty('--p',eo(cl(e*1.5-.12)).toFixed(3));
     c.wl.forEach((w,j)=>{const a=eo(cl(e*1.5-.2-j*.06));w.style.transform=`translate3d(0,${((1-a)*105).toFixed(1)}%,0)`});
@@ -386,7 +395,7 @@ function motion(now,dt){
     c.cnt.forEach(n=>{const to=+n.dataset.count,d=+(n.dataset.dec||0),a=eo(cl(e*1.5-.5)),v=(to*a).toFixed(d);n.textContent=n.dataset.sep?(+v).toLocaleString('en-US'):v});
   }
   F=scrollF();const on=Math.round(F);railA.forEach((a,i)=>a.classList.toggle('on',i===on));
-  prog.style.transform=`scaleX(${cl(SY/Math.max(1,document.documentElement.scrollHeight-vh)).toFixed(4)})`;
+  prog.style.transform=`scaleX(${cl(SY/Math.max(1,maxY)).toFixed(4)})`;
   const r=pipe.getBoundingClientRect(),u=cl((vh*.8-r.top)/(vh*.5));pl.style.strokeDashoffset=1-u;lis.forEach((l,i)=>l.classList.toggle('lit',u>=i/4-.001&&u>0));
 }
 let mt=performance.now();const mloop=now=>{const dt=Math.min(.05,(now-mt)/1000);mt=now;motion(now,dt);requestAnimationFrame(mloop)};
